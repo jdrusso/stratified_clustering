@@ -1,0 +1,26 @@
+[build-system]
+requires      = ["setuptools", "wheel"]
+
+[project]
+name = "Stratified Clustering"
+version = "0.1.0"
+description = "Implementation of stratified clustering"
+readme = "README.md"
+authors = [{ name = "John Russo", email = "jdrusso@users.noreply.github.com" }]
+license = { text = "BSD 3-Clause License" }
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["clustering","k-means","stratified"]
+dependencies = [
+    "numpy",
+    "scikit-learn",
+]
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+dev = ["black", "pytest"]
+
+[project.urls]
+Homepage = "https://github.com/jdrusso/stratified_clustering"
