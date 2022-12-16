@@ -18,11 +18,11 @@ class StratifiedClusterer:
         return len(self.strata) + 2
 
     @staticmethod
-    def validate_data(data, stratify_data):
+    def validate_data(data: ArrayLike, stratify_data: ArrayLike) -> None:
 
         assert len(data) == len(stratify_data), "Number of datapoint and stratification points do not agree!"
 
-    def assign_strata(self, stratify_data):
+    def assign_strata(self, stratify_data: ArrayLike) -> ArrayLike:
 
         assert self.strata is not None, "Attempting to assign to strata, but strata have not been defined yet!"
 
@@ -30,13 +30,13 @@ class StratifiedClusterer:
 
         return stratum_assignments
 
-    def fit(self, data: ArrayLike, k: int, stratify_coordinate: ArrayLike, strata: ArrayLike):
+    def fit(self, data: ArrayLike, k: int, stratify_coordinate: ArrayLike, strata: ArrayLike) -> None:
 
         self.validate_data(data, stratify_coordinate)
 
         # Assign each stratify_coordinate to a stratum
         # TODO: For now, assuming the strata are ordered
-        assert strata == np.sort(strata), "Strata boundaries not sorted!"
+        assert np.equal(strata, np.sort(strata)).all(), "Strata boundaries not sorted!"
         self.strata = strata
 
         stratum_assignments = self.assign_strata(stratify_coordinate)
@@ -50,15 +50,23 @@ class StratifiedClusterer:
         ]
 
         for stratum_index in range(self.n_strata):
+            # TODO: Handle if you don't have enough points in this bin! What do we do then? Probably just error.
 
             stratum_kmeans = self.strata_kmeans[stratum_index]
 
-            points_in_stratum = np.argwhere(stratum_assignments == stratum_index)
+            points_in_stratum = np.where(stratum_assignments == stratum_index)[0]
             data_in_stratum = data[points_in_stratum]
+
+            print(data_in_stratum)
+            print(points_in_stratum)
+
+            if len(points_in_stratum) == 0:
+                print(f"No points in stratum {stratum_index}!")
+                continue
 
             stratum_kmeans.fit(data_in_stratum)
 
-    def predict(self, data, stratify_coordinate):
+    def predict(self, data: ArrayLike, stratify_coordinate: ArrayLike) -> ArrayLike:
 
         self.validate_data(data, stratify_coordinate)
 
@@ -71,20 +79,35 @@ class StratifiedClusterer:
         #   stratum 0, then the 0th cluster in stratum 1 will be assigned id 5.
         stratum_cluster_offset = 0
 
-        cluster_assignments = np.zeros(data.shape[:2], dtype=int)
+        # We can either have one long trajectory, or many N-dimensional trajectories
+        # So if data has only 1 dimension, then we have n_traj=1, length=len(data)
+
+        if len(data.shape) == 1:
+            n_traj = 1
+            traj_len = len(data)
+        else:
+            n_traj = data.shape[0]
+            traj_len = data.shape[1]
+
+        cluster_assignments = np.zeros((n_traj, traj_len), dtype=int)
 
         for stratum_index in range(self.n_strata):
 
             stratum_kmeans = self.strata_kmeans[stratum_index]
 
-            points_in_stratum = np.argwhere(stratum_assignments == stratum_index)
+            points_in_stratum = np.where(stratum_assignments == stratum_index)[0]
             data_in_stratum = data[points_in_stratum]
 
+            if len(data_in_stratum) == 0:
+                continue # Not predicting any datapoints in this stratum
+
             points = stratum_kmeans.predict(data_in_stratum) + stratum_cluster_offset
+            points = points.reshape(data_in_stratum.shape)
             cluster_assignments[points_in_stratum] = points
 
             stratum_cluster_offset += len(stratum_kmeans.cluster_centers_)
 
-        assert len(cluster_assignments) == len(data)
+        assert len(cluster_assignments) == len(data), "Sanity check on clustering failed! Number of cluster " \
+                                                      "assignments doesn't match input data."
 
         return cluster_assignments
