@@ -29,7 +29,7 @@ class TestStratifiedClustering(unittest.TestCase):
             k=self.k,
             stratify_coordinate=self.sample_stratify_data,
             strata=self.sample_bounds,
-            random_state=1337
+            random_state=self.seed
         )
 
         assignments = clusterer.predict(self.identical_sample_data, self.sample_stratify_data)
@@ -55,7 +55,7 @@ class TestStratifiedClustering(unittest.TestCase):
             k=self.k,
             stratify_coordinate=self.sample_stratify_data,
             strata=self.sample_bounds,
-            random_state=1337
+            random_state=self.seed
         )
 
         assignments = clusterer.predict(self.sample_data, self.sample_stratify_data)
