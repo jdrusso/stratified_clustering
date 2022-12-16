@@ -92,7 +92,7 @@ class StratifiedClusterer:
             n_traj = data.shape[0]
             traj_len = data.shape[1]
 
-        cluster_assignments = np.zeros((n_traj, traj_len), dtype=int)
+        cluster_assignments = np.zeros(n_traj, dtype=int)
 
         for stratum_index in range(self.n_strata):
 
@@ -105,7 +105,7 @@ class StratifiedClusterer:
                 continue  # Not predicting any datapoints in this stratum
 
             points = stratum_kmeans.predict(data_in_stratum) + stratum_cluster_offset
-            points = points.reshape(data_in_stratum.shape)
+            points = points#.reshape(data_in_stratum.shape)
             cluster_assignments[points_in_stratum] = points
 
             stratum_cluster_offset += len(stratum_kmeans.cluster_centers_)

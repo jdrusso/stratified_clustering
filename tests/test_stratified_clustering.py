@@ -11,7 +11,7 @@ class TestStratifiedClustering(unittest.TestCase):
         self.sample_stratify_data = np.array([-5, -3,  # A few numbers below the bottom bounds
                                               1.5, 1.25, 2.5, 2.3,  # A few clean ones
                                               10, 11, 12  # One that's above the upper bound
-                                              ]).reshape(-1, 1)
+                                              ])
 
         self.k = 2
         self.seed = 1337
@@ -19,8 +19,8 @@ class TestStratifiedClustering(unittest.TestCase):
     def test_identical_fit_and_predict(self) -> None:
         # This is just a bunch of points that are all 1 -- this will be used to show that stratified clustering
         #   gives different cluster IDs for the same point in a different stratum.
-        self.identical_sample_data = np.ones_like(self.sample_stratify_data)
-        self.identical_reference_assignments = np.array([0, 0, 2, 2, 4, 4, 6, 6, 6]).reshape(-1, 1)
+        self.identical_sample_data = np.ones_like(self.sample_stratify_data).reshape(-1, 1)
+        self.identical_reference_assignments = np.array([0, 0, 2, 2, 4, 4, 6, 6, 6])
 
         clusterer = StratifiedClusterer()
 
@@ -37,16 +37,50 @@ class TestStratifiedClustering(unittest.TestCase):
         assert np.all(assignments == self.identical_reference_assignments)
 
     def test_fit_and_predict(self) -> None:
+
         self.sample_data = np.array([
             1, 5,
             1.1, 1.2, 3, 1,
             2, 3, 1
         ]).reshape(-1, 1)
+
         self.reference_assignments = np.array([
             1, 0,
             3, 2, 5, 4,
             7, 6, 7
-        ]).reshape(-1, 1)
+        ])
+
+        clusterer = StratifiedClusterer()
+
+        clusterer.fit(
+            data=self.sample_data,
+            k=self.k,
+            stratify_coordinate=self.sample_stratify_data,
+            strata=self.sample_bounds,
+            random_state=self.seed
+        )
+
+        assignments = clusterer.predict(self.sample_data, self.sample_stratify_data)
+
+        assert np.all(assignments == self.reference_assignments), assignments
+
+    def test_multidimensional_fit_and_predict(self) -> None:
+        self.sample_data = np.array([
+            [1, 2, 3],
+            [5, 1, 2],
+            [1.1, 1.3, 4],
+            [1.2, 1.4, 6],
+            [3, 1.1, 2.4],
+            [1.1, 3.2, 4.4],
+            [2.2, -1, 0.75],
+            [3.1, 8, 2.1],
+            [1, 0, 4.5]
+        ])
+        self.reference_assignments = np.array([
+            1, 0,
+            3, 2, 5, 4,
+            7, 6, 7
+        ])
 
         clusterer = StratifiedClusterer()
 
