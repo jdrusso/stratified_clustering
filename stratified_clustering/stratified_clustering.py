@@ -57,9 +57,6 @@ class StratifiedClusterer:
             points_in_stratum = np.where(stratum_assignments == stratum_index)[0]
             data_in_stratum = data[points_in_stratum]
 
-            print(data_in_stratum)
-            print(points_in_stratum)
-
             if len(points_in_stratum) == 0:
                 print(f"No points in stratum {stratum_index}!")
                 continue
