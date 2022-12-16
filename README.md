@@ -53,6 +53,8 @@ Implementation of stratified clustering
 import numpy as np
 from stratified_clustering.stratified_clustering import StratifiedClusterer
 
+n_clusters = 5
+
 # Define the data/coordinate we'll stratify on
 stratification_data = np.array([1.1, 2.3, 3.1, 4.7])
 
@@ -69,9 +71,8 @@ data = np.array([
     [1.6, 5.3, 8.1],  # In group 3, stratification coordinate is 4.7
 ])
 
+# Fit the stratified clustering model
 clusterer = StratifiedClusterer()
-
-n_clusters = 5
 clusterer.fit(
     data = data,
     k = n_clusters,
@@ -79,6 +80,7 @@ clusterer.fit(
     strata = strata_boundaries
 )
 
+# Now apply the model to discretize two data points
 test_stratification_data = np.array([
     2, 
     4
