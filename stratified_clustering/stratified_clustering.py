@@ -19,10 +19,15 @@ class StratifiedClusterer:
 
     @staticmethod
     def validate_data(data: ArrayLike, stratify_data: ArrayLike) -> None:
+        """
+        These should not necessarily have to be the same dimensionality, but they should be the same length.
+        In other words, each frame can have 3-D stratified coordinates and 5-D data-coordinates, or vice versa, but
+            the number of frames must match.
+        """
 
         assert len(data) == len(stratify_data), "Number of datapoint and stratification points do not agree!"
 
-    def assign_strata(self, stratify_data: ArrayLike) -> ArrayLike:
+    def assign_strata(self, stratify_data: ArrayLike) -> np.ndarray:
 
         assert self.strata is not None, "Attempting to assign to strata, but strata have not been defined yet!"
 
@@ -30,7 +35,7 @@ class StratifiedClusterer:
 
         return stratum_assignments
 
-    def fit(self, data: ArrayLike, k: int, stratify_coordinate: ArrayLike, strata: ArrayLike) -> None:
+    def fit(self, data: ArrayLike, k: int, stratify_coordinate: ArrayLike, strata: ArrayLike, **kwargs) -> None:
 
         self.validate_data(data, stratify_coordinate)
 
@@ -45,7 +50,7 @@ class StratifiedClusterer:
         # The total number of strata is the number of provided strata + 2 (the +2 add bins going to -inf and +inf)
         # TODO: Handle if the user already has bounds going from -inf to +inf
         self.strata_kmeans = [
-            KMeans(n_clusters=k)
+            KMeans(n_clusters=k, **kwargs)
             for _ in range(self.n_strata)
         ]
 
@@ -63,7 +68,7 @@ class StratifiedClusterer:
 
             stratum_kmeans.fit(data_in_stratum)
 
-    def predict(self, data: ArrayLike, stratify_coordinate: ArrayLike) -> ArrayLike:
+    def predict(self, data: ArrayLike, stratify_coordinate: ArrayLike) -> np.ndarray:
 
         self.validate_data(data, stratify_coordinate)
 
@@ -78,6 +83,7 @@ class StratifiedClusterer:
 
         # We can either have one long trajectory, or many N-dimensional trajectories
         # So if data has only 1 dimension, then we have n_traj=1, length=len(data)
+        # TODO: There's probably a smarter way to do this with a reshape.
 
         if len(data.shape) == 1:
             n_traj = 1
@@ -96,7 +102,7 @@ class StratifiedClusterer:
             data_in_stratum = data[points_in_stratum]
 
             if len(data_in_stratum) == 0:
-                continue # Not predicting any datapoints in this stratum
+                continue  # Not predicting any datapoints in this stratum
 
             points = stratum_kmeans.predict(data_in_stratum) + stratum_cluster_offset
             points = points.reshape(data_in_stratum.shape)
